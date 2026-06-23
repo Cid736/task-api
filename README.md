@@ -45,7 +45,7 @@ npm start
 # Register
 curl -X POST http://localhost:3000/api/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"username":"eric","email":"eric@example.com","password":"secret123"}'
+  -d '{"username":"user","email":"mail@example.com","password":"secret123"}'
 
 # Create a task
 curl -X POST http://localhost:3000/api/tasks \
