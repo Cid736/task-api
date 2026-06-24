@@ -1,15 +1,20 @@
 # Task API
 
-REST API for task management with JWT authentication. Built with Node.js, Express, and SQLite.
+REST API for task management with JWT authentication, full test coverage and automated CI/CD. Built with Node.js, Express and SQLite.
 
 ## Stack
-Node.js · Express · SQLite (better-sqlite3) · JWT · bcryptjs
+Node.js · Express · SQLite (better-sqlite3) · JWT · bcryptjs · Docker · GitHub Actions
 
 ## Setup
 ```bash
 npm install
 cp .env.example .env   # set your JWT_SECRET
-npm start
+npm start              # http://localhost:3000
+```
+
+## Tests
+```bash
+npm test   # runs 18 integration tests (Auth + Tasks CRUD)
 ```
 
 ## Endpoints
@@ -23,11 +28,16 @@ npm start
 ### Tasks (require `Authorization: Bearer <token>`)
 | Method | Route | Description |
 |--------|-------|-------------|
-| `GET`  | `/api/tasks` | List tasks (filter: `?status=pending&priority=high`) |
-| `POST` | `/api/tasks` | Create task |
-| `GET`  | `/api/tasks/:id` | Get task |
-| `PUT`  | `/api/tasks/:id` | Update task |
+| `GET`    | `/api/tasks` | List tasks (filter: `?status=pending&priority=high`) |
+| `POST`   | `/api/tasks` | Create task |
+| `GET`    | `/api/tasks/:id` | Get task |
+| `PUT`    | `/api/tasks/:id` | Update task |
 | `DELETE` | `/api/tasks/:id` | Delete task |
+
+### Health
+| Method | Route | Description |
+|--------|-------|-------------|
+| `GET` | `/health` | Health check — returns `{ status: "ok" }` |
 
 ## Task fields
 ```json
@@ -39,6 +49,18 @@ npm start
   "due_date": "2026-07-01"
 }
 ```
+
+## Docker
+```bash
+docker build -t task-api .
+docker run -p 3000:3000 -e JWT_SECRET=your_secret task-api
+```
+
+## CI/CD
+GitHub Actions pipeline on every push:
+1. Install dependencies and run the 18 integration tests
+2. Build the Docker image
+3. Smoke-test the container (`GET /health`)
 
 ## Example
 ```bash

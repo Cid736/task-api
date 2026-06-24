@@ -1,44 +1,66 @@
 # Task API
 
-API REST para gestion de tareas con autenticacion JWT. Construida con Node.js, Express y SQLite.
+API REST para gestión de tareas con autenticación JWT, cobertura de tests completa y CI/CD automatizado. Construida con Node.js, Express y SQLite.
 
 ## Stack
-Node.js · Express · SQLite (better-sqlite3) · JWT · bcryptjs
+Node.js · Express · SQLite (better-sqlite3) · JWT · bcryptjs · Docker · GitHub Actions
 
-## Instalacion
+## Instalación
 ```bash
 npm install
 cp .env.example .env   # configura tu JWT_SECRET
-npm start
+npm start              # http://localhost:3000
+```
+
+## Tests
+```bash
+npm test   # ejecuta 18 tests de integración (Auth + CRUD de Tareas)
 ```
 
 ## Endpoints
 
-### Autenticacion
-| Metodo | Ruta | Descripcion |
+### Autenticación
+| Método | Ruta | Descripción |
 |--------|------|-------------|
 | `POST` | `/api/auth/register` | Crear cuenta |
-| `POST` | `/api/auth/login` | Iniciar sesion y obtener token |
+| `POST` | `/api/auth/login` | Iniciar sesión y obtener token |
 
 ### Tareas (requieren `Authorization: Bearer <token>`)
-| Metodo | Ruta | Descripcion |
+| Método | Ruta | Descripción |
 |--------|------|-------------|
-| `GET`  | `/api/tasks` | Listar tareas (filtros: `?status=pending&priority=high`) |
-| `POST` | `/api/tasks` | Crear tarea |
-| `GET`  | `/api/tasks/:id` | Obtener tarea |
-| `PUT`  | `/api/tasks/:id` | Actualizar tarea |
+| `GET`    | `/api/tasks` | Listar tareas (filtros: `?status=pending&priority=high`) |
+| `POST`   | `/api/tasks` | Crear tarea |
+| `GET`    | `/api/tasks/:id` | Obtener tarea |
+| `PUT`    | `/api/tasks/:id` | Actualizar tarea |
 | `DELETE` | `/api/tasks/:id` | Eliminar tarea |
+
+### Health
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `GET` | `/health` | Health check — devuelve `{ status: "ok" }` |
 
 ## Campos de tarea
 ```json
 {
-  "title": "Desplegar a produccion",
-  "description": "Texto opcional mas largo",
+  "title": "Desplegar a producción",
+  "description": "Texto opcional más largo",
   "status": "pending | in_progress | done",
   "priority": "low | medium | high",
   "due_date": "2026-07-01"
 }
 ```
+
+## Docker
+```bash
+docker build -t task-api .
+docker run -p 3000:3000 -e JWT_SECRET=tu_secreto task-api
+```
+
+## CI/CD
+Pipeline de GitHub Actions en cada push:
+1. Instala dependencias y ejecuta los 18 tests de integración
+2. Construye la imagen Docker
+3. Smoke-test del contenedor (`GET /health`)
 
 ## Ejemplo
 ```bash
