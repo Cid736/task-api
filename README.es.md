@@ -62,6 +62,16 @@ Pipeline de GitHub Actions en cada push:
 2. Construye la imagen Docker
 3. Smoke-test del contenedor (`GET /health`)
 
+## Historial de versiones
+
+**v0.1.1** — 2026-06-24
+- Seguridad: `JWT_SECRET` ahora es obligatoria al arrancar — el servidor aborta si no está definida
+- Seguridad: rate limiting en `/register` (10 req/15 min) y `/login` (15 req/15 min) por IP
+- Fix: `PUT /:id` devuelve 400 con datos inválidos en lugar de caer con error 500
+
+**v0.1.0** — 2026-05-01
+- Publicación inicial: autenticación JWT, CRUD completo de tareas, 18 tests de integración, Docker, CI/CD con GitHub Actions
+
 ## Ejemplo
 ```bash
 # Registrar usuario

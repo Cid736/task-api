@@ -62,6 +62,16 @@ GitHub Actions pipeline on every push:
 2. Build the Docker image
 3. Smoke-test the container (`GET /health`)
 
+## Changelog
+
+**v0.1.1** — 2026-06-24
+- Security: `JWT_SECRET` now required at startup — server exits immediately if not defined
+- Security: rate limiting on `/register` (10 req/15 min) and `/login` (15 req/15 min) per IP
+- Fix: `PUT /:id` now returns 400 on invalid data instead of crashing with 500
+
+**v0.1.0** — 2026-05-01
+- Initial release: JWT auth, full task CRUD, 18 integration tests, Docker, GitHub Actions CI/CD
+
 ## Example
 ```bash
 # Register
