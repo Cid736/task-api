@@ -23,10 +23,14 @@ router.get('/:id', (req, res) => {
 });
 
 router.put('/:id', (req, res) => {
-  const result = db.updateTask(req.params.id, req.user.id, req.body);
-  if (!result?.changes)
-    return res.status(404).json({ error: 'Tarea no encontrada' });
-  res.json(db.getTask(req.params.id, req.user.id));
+  try {
+    const result = db.updateTask(req.params.id, req.user.id, req.body);
+    if (!result?.changes)
+      return res.status(404).json({ error: 'Tarea no encontrada' });
+    res.json(db.getTask(req.params.id, req.user.id));
+  } catch {
+    res.status(400).json({ error: 'Datos inválidos' });
+  }
 });
 
 router.delete('/:id', (req, res) => {

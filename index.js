@@ -2,6 +2,11 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 
+if (!process.env.JWT_SECRET) {
+  console.error('[task-api] FATAL: JWT_SECRET no está definido en .env — abortando para evitar tokens sin firma segura');
+  process.exit(1);
+}
+
 app.use(express.json());
 app.use('/api/auth',  require('./routes/auth'));
 app.use('/api/tasks', require('./routes/tasks'));
