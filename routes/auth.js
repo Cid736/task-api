@@ -27,6 +27,8 @@ router.post('/register', rateLimit(10), async (req, res) => {
   const { username, email, password } = req.body;
   if (!username || !email || !password)
     return res.status(400).json({ error: 'username, email y password son obligatorios' });
+  if (username.length > 64 || email.length > 254 || password.length > 128)
+    return res.status(400).json({ error: 'Input demasiado largo' });
   if (password.length < 6)
     return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
   try {
@@ -37,6 +39,7 @@ router.post('/register', rateLimit(10), async (req, res) => {
   } catch (e) {
     if (e.message.includes('UNIQUE'))
       return res.status(409).json({ error: 'Email o username ya registrado' });
+    console.error('[auth] register error:', e.message);
     res.status(500).json({ error: 'Error interno' });
   }
 });
