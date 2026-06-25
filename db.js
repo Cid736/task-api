@@ -23,7 +23,13 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_tasks_user ON tasks(user_id);
 `);
 
-const ALLOWED = ['title', 'description', 'status', 'priority', 'due_date'];
+const FIELD_SQL = {
+  title:       'title=?',
+  description: 'description=?',
+  status:      'status=?',
+  priority:    'priority=?',
+  due_date:    'due_date=?',
+};
 
 module.exports = {
   createUser: (username, email, hash) =>
@@ -51,11 +57,11 @@ module.exports = {
     db.prepare('SELECT * FROM tasks WHERE id=? AND user_id=?').get(id, userId),
 
   updateTask: (id, userId, body) => {
-    const keys = Object.keys(body).filter(k => ALLOWED.includes(k));
-    if (!keys.length) return null;
-    const set = [...keys.map(k => `${k}=?`), "updated_at=datetime('now')"];
+    const entries = Object.entries(body).filter(([k]) => k in FIELD_SQL);
+    if (!entries.length) return null;
+    const set = [...entries.map(([k]) => FIELD_SQL[k]), "updated_at=datetime('now')"];
     return db.prepare(`UPDATE tasks SET ${set.join(',')} WHERE id=? AND user_id=?`)
-      .run(...keys.map(k => body[k]), id, userId);
+      .run(...entries.map(([, v]) => v), id, userId);
   },
 
   deleteTask: (id, userId) =>
