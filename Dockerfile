@@ -1,10 +1,9 @@
 FROM node:20-alpine
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --omit=dev
-COPY . .
-# Run as non-root to limit container damage if the process is compromised
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN npm ci --omit=dev && \
+    addgroup -S appgroup && adduser -S appuser -G appgroup
+COPY --chown=appuser:appgroup . .
 USER appuser
 EXPOSE 3000
 ENV NODE_ENV=production
