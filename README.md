@@ -98,7 +98,27 @@ curl -X POST http://localhost:3000/api/tasks \
 
 Automated security reviews are powered by [Claude](https://claude.ai) (Anthropic AI) and run on every significant change to detect vulnerabilities, insecure patterns and dependency risks. Findings are tracked in [`BUGLOG.md`](BUGLOG.md).
 
-**Last review:** 2026-06-25 — 2 issues found (1 high⚠️ manual action required, 1 medium) — code patched. Rotate JWT_SECRET manually.
+**Last review:** 2026-06-28 — 4 issues found and patched (0 critical, 0 high, 2 medium, 2 low). See details below.
+
+### Findings — 2026-06-28
+
+| # | Severity | File | Line(s) | Description | Status |
+|---|----------|------|---------|-------------|--------|
+| 1 | MEDIA | `routes/auth.js` | 9-24 | Custom in-memory rate limiter had memory-leak risk (unbounded Map growth) and could be bypassed on window reset. `express-rate-limit` (already a declared dependency) was unused. | Fixed |
+| 2 | MEDIA | `routes/tasks.js` | 7-39 | No input validation on task fields (`title`, `description`, `due_date`, `priority`, `status`) or on query-string filter params — allowed arbitrary-length payloads and invalid enum values to reach the database silently. | Fixed |
+| 3 | BAJA | `middleware/auth.js` | 8 | `jwt.verify` did not explicitly restrict the accepted algorithm list. Although `jsonwebtoken ≥9` blocks `alg:none` by default, best practice is to pin `algorithms: ['HS256']`. | Fixed |
+| 4 | BAJA | `Dockerfile` | — | Container ran as root. Added a dedicated non-root `appuser` to limit blast radius if the process is compromised. | Fixed |
+
+### Changes applied
+
+- **`routes/auth.js`** — Removed the custom `_hits` Map rate limiter and replaced both `rateLimit(10)` / `rateLimit(15)` calls with dedicated `express-rate-limit` instances (`registerLimiter` / `loginLimiter`), which are properly bounded, respect `RateLimit-*` standard headers, and reset the window correctly.
+- **`routes/tasks.js`** — Added `VALID_STATUS` / `VALID_PRIORITY` sets; added a `parseId()` helper that validates route params as positive integers (all four task routes now use it); added length and type guards on `title` (≤ 255), `description` (≤ 10 000), `due_date` (regex `YYYY-MM-DD`), `status`, and `priority` for both POST and PUT; query-string filters for GET are now whitelisted against the same sets.
+- **`middleware/auth.js`** — Added `{ algorithms: ['HS256'] }` option to `jwt.verify`.
+- **`Dockerfile`** — Added `addgroup`/`adduser` for a non-root `appuser` and `USER appuser` directive before `EXPOSE`.
+
+### Dependencies — 2026-06-28
+
+All production dependencies (`bcryptjs ^2.4.3`, `better-sqlite3 ^9.4.3`, `dotenv ^16.4.1`, `express ^4.18.2`, `express-rate-limit ^8.5.2`, `helmet ^8.2.0`, `jsonwebtoken ^9.0.2`) have no known high or critical CVEs as of this review date.
 
 Found a vulnerability? Open an issue or contact directly.
 
@@ -158,7 +178,7 @@ Pipeline de GitHub Actions en cada push:
 
 Las revisiones de seguridad automatizadas utilizan [Claude](https://claude.ai) (Anthropic AI) y se ejecutan en cada cambio significativo para detectar vulnerabilidades, patrones inseguros y riesgos en dependencias. Los hallazgos se registran en [`BUGLOG.md`](BUGLOG.md).
 
-**Última revisión:** 2026-06-25 — 2 vulnerabilidades encontradas (1 alta⚠️ acción manual requerida, 1 media) — código parcheado. Rotar JWT_SECRET manualmente.
+**Última revisión:** 2026-06-28 — 4 vulnerabilidades encontradas y parcheadas (0 críticas, 0 altas, 2 medias, 2 bajas). Ver detalles en la sección Security del README en inglés.
 
 ¿Encontraste una vulnerabilidad? Abre un issue o contacta directamente.
 ## Licencia

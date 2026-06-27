@@ -1,29 +1,30 @@
-const router = require('express').Router();
-const bcrypt = require('bcryptjs');
-const jwt    = require('jsonwebtoken');
-const db     = require('../db');
+const router    = require('express').Router();
+const bcrypt    = require('bcryptjs');
+const jwt       = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
+const db        = require('../db');
 
 const sign = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
-// Simple in-memory rate limiter: max N attempts per IP per 15 min window
-const _hits = new Map();
-function rateLimit(max) {
-  return (req, res, next) => {
-    const key = req.ip;
-    const now = Date.now();
-    const entry = _hits.get(key);
-    if (entry && now < entry.resetAt) {
-      if (entry.count >= max)
-        return res.status(429).json({ error: 'Demasiados intentos. Espera unos minutos.' });
-      entry.count++;
-    } else {
-      _hits.set(key, { count: 1, resetAt: now + 15 * 60 * 1000 });
-    }
-    next();
-  };
-}
+// Rate limiters backed by express-rate-limit (handles sliding windows correctly,
+// uses an internal store, and does not grow unbounded like a plain Map).
+const registerLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiados intentos. Espera unos minutos.' },
+});
 
-router.post('/register', rateLimit(10), async (req, res) => {
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 15,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiados intentos. Espera unos minutos.' },
+});
+
+router.post('/register', registerLimiter, async (req, res) => {
   const { username, email, password } = req.body;
   if (!username || !email || !password)
     return res.status(400).json({ error: 'username, email y password son obligatorios' });
@@ -44,7 +45,7 @@ router.post('/register', rateLimit(10), async (req, res) => {
   }
 });
 
-router.post('/login', rateLimit(15), async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password)
     return res.status(400).json({ error: 'email y password son obligatorios' });
