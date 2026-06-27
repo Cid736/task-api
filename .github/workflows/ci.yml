@@ -43,5 +43,6 @@ jobs:
             -e JWT_SECRET=smoke-test \
             task-api:${{ github.sha }}
           sleep 3
+          docker logs api
           curl -f http://localhost:3000/health
           docker stop api
